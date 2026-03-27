@@ -275,7 +275,7 @@ export default function ProfileForm({ isOnboarding }: Props) {
       </Section>
 
       {/* 저장 버튼 - 고정 */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-white px-5 py-4 border-t border-toss-gray-100 z-50">
+      <div className="fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-lg bg-white px-5 py-3 border-t border-toss-gray-100 z-50">
         <button
           onClick={handleSave}
           className={`w-full py-3.5 rounded-2xl font-semibold text-base transition-colors ${

@@ -28,7 +28,8 @@ interface ProfileCtx {
   setProfile: (p: UserProfile) => void;
   save: () => void;
   dirty: boolean;
-  hasSetup: boolean; // 최초 설정 완료 여부
+  hasSetup: boolean;
+  mounted: boolean;
 }
 
 const Ctx = createContext<ProfileCtx>({
@@ -37,6 +38,7 @@ const Ctx = createContext<ProfileCtx>({
   save: () => {},
   dirty: false,
   hasSetup: false,
+  mounted: false,
 });
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
@@ -63,7 +65,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const dirty = mounted && JSON.stringify(profile) !== saved;
 
   return (
-    <Ctx.Provider value={{ profile, setProfile, save, dirty, hasSetup }}>
+    <Ctx.Provider value={{ profile, setProfile, save, dirty, hasSetup, mounted }}>
       {children}
     </Ctx.Provider>
   );

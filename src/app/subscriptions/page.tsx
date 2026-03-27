@@ -45,7 +45,7 @@ export default function SubscriptionsPage() {
         </button>
         <h1 className="text-2xl font-bold">청약 목록</h1>
         <p className="text-sm text-toss-gray-500 mt-1">
-          서울 {allResults.length}건
+          {isLoading ? "불러오는 중..." : `전체 ${allResults.length}건`}
         </p>
       </header>
 

@@ -6,7 +6,15 @@ import Onboarding from "@/components/Onboarding";
 import MatchedFeed from "@/components/MatchedFeed";
 
 export default function Home() {
-  const { hasSetup } = useProfile();
+  const { hasSetup, mounted } = useProfile();
+
+  if (!mounted) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-toss-blue border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!hasSetup) {
     return <Onboarding />;

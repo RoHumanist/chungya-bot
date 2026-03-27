@@ -1,7 +1,6 @@
 "use client";
 
 import { use } from "react";
-import Link from "next/link";
 import { MOCK_SUBSCRIPTIONS } from "@/lib/mock-data";
 import { formatPrice, formatArea, dDay, formatDate } from "@/lib/format";
 
@@ -38,11 +37,11 @@ export default function SubscriptionDetail({
       {/* 상단 바 */}
       <header className="sticky top-0 z-40 bg-white border-b border-toss-gray-100">
         <div className="flex items-center px-4 h-12">
-          <Link href="/subscriptions" className="p-2 -ml-2 text-toss-gray-700">
+          <button onClick={() => window.history.back()} className="p-2 -ml-2 text-toss-gray-700">
             <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
               <path d="M15 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </Link>
+          </button>
           <h1 className="ml-2 font-semibold truncate">{sub.name}</h1>
         </div>
       </header>
