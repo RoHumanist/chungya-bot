@@ -28,28 +28,39 @@ const ENCOURAGEMENTS = [
   "마지막이에요!",
 ];
 
-const REGIONS: { code: string; name: string; group?: string }[] = [
-  { code: "100", name: "서울", group: "수도권" },
-  { code: "410", name: "경기", group: "수도권" },
-  { code: "400", name: "인천", group: "수도권" },
-  { code: "600", name: "부산", group: "영남" },
-  { code: "700", name: "대구", group: "영남" },
-  { code: "680", name: "울산", group: "영남" },
-  { code: "621", name: "경남", group: "영남" },
-  { code: "712", name: "경북", group: "영남" },
-  { code: "500", name: "광주", group: "호남" },
-  { code: "560", name: "전북", group: "호남" },
-  { code: "513", name: "전남", group: "호남" },
-  { code: "300", name: "대전", group: "충청" },
-  { code: "338", name: "세종", group: "충청" },
-  { code: "360", name: "충북", group: "충청" },
-  { code: "312", name: "충남", group: "충청" },
-  { code: "200", name: "강원", group: "기타" },
-  { code: "690", name: "제주", group: "기타" },
+const REGIONS: { name: string; group: string; subs?: string[] }[] = [
+  { name: "서울", group: "수도권", subs: [
+    "강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구",
+    "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구",
+    "성동구", "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구",
+  ]},
+  { name: "경기", group: "수도권", subs: [
+    "수원시", "성남시", "고양시", "용인시", "부천시", "안산시", "안양시", "남양주시",
+    "화성시", "평택시", "의정부시", "시흥시", "파주시", "광명시", "김포시", "군포시",
+    "광주시", "이천시", "양주시", "오산시", "구리시", "안성시", "포천시", "의왕시",
+    "하남시", "여주시", "양평군", "동두천시", "과천시", "가평군", "연천군",
+  ]},
+  { name: "인천", group: "수도권", subs: [
+    "중구", "동구", "미추홀구", "연수구", "남동구", "부평구", "계양구", "서구", "강화군", "옹진군",
+  ]},
+  { name: "부산", group: "영남" },
+  { name: "대구", group: "영남" },
+  { name: "울산", group: "영남" },
+  { name: "경남", group: "영남" },
+  { name: "경북", group: "영남" },
+  { name: "광주", group: "호남" },
+  { name: "전북", group: "호남" },
+  { name: "전남", group: "호남" },
+  { name: "대전", group: "충청" },
+  { name: "세종", group: "충청" },
+  { name: "충북", group: "충청" },
+  { name: "충남", group: "충청" },
+  { name: "강원", group: "기타" },
+  { name: "제주", group: "기타" },
 ];
 
 const REGION_GROUPS = ["수도권", "영남", "호남", "충청", "기타"] as const;
-const SUDOGWON = REGIONS.filter((r) => r.group === "수도권").map((r) => r.code);
+const SUDOGWON_NAMES = REGIONS.filter((r) => r.group === "수도권").map((r) => r.name);
 
 const SUB_TYPES: { value: SubscriptionType; label: string; desc: string }[] = [
   { value: "민간분양", label: "민간분양", desc: "통장 잔액 기준" },
@@ -349,25 +360,35 @@ function RegionStep({
 }: {
   regions: string[]; onChange: (r: string[]) => void;
 }) {
-  const allCodes = REGIONS.map((r) => r.code);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const isAll = regions.length === 0;
-  const isSudo = SUDOGWON.every((c) => regions.includes(c));
 
-  const toggle = (code: string) => {
-    onChange(regions.includes(code) ? regions.filter((r) => r !== code) : [...regions, code]);
+  const toggle = (name: string) => {
+    onChange(regions.includes(name) ? regions.filter((r) => r !== name) : [...regions, name]);
+  };
+
+  const toggleAll = (regionName: string, subs: string[]) => {
+    const prefixed = subs.map((s) => `${regionName} ${s}`);
+    const allSelected = prefixed.every((p) => regions.includes(p));
+    if (allSelected) onChange(regions.filter((r) => !prefixed.includes(r)));
+    else onChange([...new Set([...regions, ...prefixed])]);
   };
 
   const selectAll = () => onChange([]);
   const selectSudo = () => {
-    if (isSudo) onChange(regions.filter((r) => !SUDOGWON.includes(r)));
-    else onChange([...new Set([...regions, ...SUDOGWON])]);
+    const allSudoSubs = REGIONS.filter((r) => r.group === "수도권" && r.subs)
+      .flatMap((r) => r.subs!.map((s) => `${r.name} ${s}`));
+    const sudoSimple = REGIONS.filter((r) => r.group === "수도권" && !r.subs).map((r) => r.name);
+    const all = [...allSudoSubs, ...sudoSimple];
+    const allSelected = all.every((n) => regions.includes(n));
+    if (allSelected) onChange(regions.filter((r) => !all.includes(r)));
+    else onChange([...new Set([...regions, ...all])]);
   };
-  const selectGroup = (group: string) => {
-    const codes = REGIONS.filter((r) => r.group === group).map((r) => r.code);
-    const allSelected = codes.every((c) => regions.includes(c));
-    if (allSelected) onChange(regions.filter((r) => !codes.includes(r)));
-    else onChange([...new Set([...regions, ...codes])]);
-  };
+
+  const isSudo = REGIONS.filter((r) => r.group === "수도권").every((r) => {
+    if (r.subs) return r.subs.every((s) => regions.includes(`${r.name} ${s}`));
+    return regions.includes(r.name);
+  }) && !isAll;
 
   return (
     <div className="space-y-4">
@@ -386,7 +407,7 @@ function RegionStep({
         <button
           onClick={selectSudo}
           className={`flex-1 py-3 rounded-2xl text-sm font-semibold transition-all border-2 ${
-            isSudo && !isAll
+            isSudo
               ? "border-toss-blue bg-toss-blue-light text-toss-blue"
               : "border-toss-gray-100 bg-white text-toss-gray-700"
           }`}
@@ -398,32 +419,85 @@ function RegionStep({
       {/* 지역 그룹별 */}
       {REGION_GROUPS.map((group) => {
         const items = REGIONS.filter((r) => r.group === group);
-        const allSelected = items.every((r) => regions.includes(r.code));
         return (
           <div key={group}>
-            <button
-              onClick={() => selectGroup(group)}
-              className="flex items-center gap-2 mb-2"
-            >
-              <span className="text-xs font-bold text-toss-gray-500 uppercase">{group}</span>
-              {allSelected && !isAll && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-toss-blue text-white rounded-full font-bold">ALL</span>
-              )}
-            </button>
+            <p className="text-xs font-bold text-toss-gray-500 mb-2">{group}</p>
             <div className="flex flex-wrap gap-2">
-              {items.map((r) => (
-                <button
-                  key={r.code}
-                  onClick={() => { if (isAll) onChange([r.code]); else toggle(r.code); }}
-                  className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                    isAll || regions.includes(r.code)
-                      ? "bg-toss-blue text-white shadow-sm"
-                      : "bg-toss-gray-100 text-toss-gray-700"
-                  }`}
-                >
-                  {r.name}
-                </button>
-              ))}
+              {items.map((r) => {
+                const hasSubs = r.subs && r.subs.length > 0;
+                const isExp = expanded === r.name;
+                const subCount = hasSubs
+                  ? r.subs!.filter((s) => regions.includes(`${r.name} ${s}`)).length
+                  : 0;
+                const selected = !hasSubs && regions.includes(r.name);
+
+                return (
+                  <div key={r.name} className="contents">
+                    <button
+                      onClick={() => {
+                        if (isAll) {
+                          // 전국 → 개별 선택 전환
+                          if (hasSubs) {
+                            setExpanded(r.name);
+                          } else {
+                            onChange([r.name]);
+                          }
+                          return;
+                        }
+                        if (hasSubs) {
+                          setExpanded(isExp ? null : r.name);
+                        } else {
+                          toggle(r.name);
+                        }
+                      }}
+                      className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+                        isAll || selected || subCount > 0
+                          ? "bg-toss-blue text-white shadow-sm"
+                          : "bg-toss-gray-100 text-toss-gray-700"
+                      }`}
+                    >
+                      {r.name}
+                      {hasSubs && subCount > 0 && !isAll && (
+                        <span className="ml-1 text-xs opacity-80">{subCount}</span>
+                      )}
+                      {hasSubs && (
+                        <span className="ml-0.5 text-[10px]">{isExp ? "▲" : "▼"}</span>
+                      )}
+                    </button>
+
+                    {hasSubs && isExp && (
+                      <div className="w-full mt-1 mb-2 ml-2 flex flex-wrap gap-1.5">
+                        <button
+                          onClick={() => toggleAll(r.name, r.subs!)}
+                          className={`px-2.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                            subCount === r.subs!.length
+                              ? "bg-toss-blue text-white"
+                              : "bg-toss-gray-200 text-toss-gray-600"
+                          }`}
+                        >
+                          전체
+                        </button>
+                        {r.subs!.map((sub) => {
+                          const full = `${r.name} ${sub}`;
+                          return (
+                            <button
+                              key={sub}
+                              onClick={() => toggle(full)}
+                              className={`px-2.5 py-1.5 rounded-full text-xs transition-colors ${
+                                regions.includes(full)
+                                  ? "bg-toss-blue text-white font-semibold"
+                                  : "bg-toss-gray-100 text-toss-gray-600"
+                              }`}
+                            >
+                              {sub}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         );

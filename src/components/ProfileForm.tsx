@@ -204,7 +204,16 @@ export default function ProfileForm({ isOnboarding }: Props) {
                         <button
                           onClick={() => {
                             if (hasSubs) {
-                              setExpandedRegion(isExpanded ? null : r.code);
+                              // 자동 expand: 클릭하면 바로 하위 지역 보여줌
+                              if (isExpanded) {
+                                setExpandedRegion(null);
+                              } else {
+                                setExpandedRegion(r.code);
+                                // 하위 없이 시·도만 선택되어있었으면 제거 (하위 선택으로 전환)
+                                if (regionSelected) {
+                                  update({ regions: profile.regions.filter((reg) => reg !== r.name) });
+                                }
+                              }
                             } else {
                               toggleRegion(r.name);
                             }
@@ -220,7 +229,7 @@ export default function ProfileForm({ isOnboarding }: Props) {
                             <span className="ml-1 text-xs opacity-80">{subSelected}</span>
                           )}
                           {hasSubs && (
-                            <span className="ml-0.5 text-xs">{isExpanded ? "▲" : "▼"}</span>
+                            <span className="ml-0.5 text-[10px]">{isExpanded ? "▲" : "▼"}</span>
                           )}
                         </button>
 
