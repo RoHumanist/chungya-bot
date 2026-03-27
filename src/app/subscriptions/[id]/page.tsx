@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { MOCK_SUBSCRIPTIONS } from "@/lib/mock-data";
+import { useSubscriptions } from "@/lib/use-subscriptions";
 import { formatPrice, formatArea, dDay, formatDate } from "@/lib/format";
 import type { Subscription, SubscriptionType } from "@/types/subscription";
 
@@ -118,7 +118,16 @@ export default function SubscriptionDetail({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const sub = MOCK_SUBSCRIPTIONS.find((s) => s.id === id);
+  const { subscriptions, isLoading } = useSubscriptions();
+  const sub = subscriptions.find((s) => s.id === id);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-dvh text-toss-gray-500">
+        불러오는 중...
+      </div>
+    );
+  }
 
   if (!sub) {
     return (

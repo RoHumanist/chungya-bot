@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/lib/filter-context";
 import type { SubscriptionType, UserProfile } from "@/types/subscription";
@@ -64,6 +64,16 @@ export default function ProfileForm({ isOnboarding }: Props) {
 
   const [expandedRegion, setExpandedRegion] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
   const isAllRegions = profile.regions.includes("__ALL__");
 
   const toggleRegion = (region: string) => {
@@ -111,16 +121,16 @@ export default function ProfileForm({ isOnboarding }: Props) {
       {/* 기본 정보 */}
       <Section title="기본 정보">
         <Row label="나이">
-          <NumberInput value={profile.age} onChange={(v) => update({ age: v })} suffix="세" />
+          <NumberInput value={profile.age} onChange={(v) => update({ age: v })} suffix="세" min={0} max={120} />
         </Row>
         <Toggle label="기혼" value={profile.isMarried} onChange={(v) => update({ isMarried: v })} />
         {profile.isMarried && (
           <Row label="혼인 경과">
-            <NumberInput value={profile.marriageYears} onChange={(v) => update({ marriageYears: v })} suffix="년" />
+            <NumberInput value={profile.marriageYears} onChange={(v) => update({ marriageYears: v })} suffix="년" min={0} max={50} />
           </Row>
         )}
         <Row label="자녀 수">
-          <NumberInput value={profile.numChildren} onChange={(v) => update({ numChildren: v })} suffix="명" />
+          <NumberInput value={profile.numChildren} onChange={(v) => update({ numChildren: v })} suffix="명" min={0} max={20} />
         </Row>
       </Section>
 
@@ -141,10 +151,10 @@ export default function ProfileForm({ isOnboarding }: Props) {
         {profile.hasAccount && (
           <>
             <Row label="가입 기간">
-              <NumberInput value={profile.accountMonths} onChange={(v) => update({ accountMonths: v })} suffix="개월" />
+              <NumberInput value={profile.accountMonths} onChange={(v) => update({ accountMonths: v })} suffix="개월" min={0} max={600} />
             </Row>
             <Row label="납입 횟수">
-              <NumberInput value={profile.accountPayments} onChange={(v) => update({ accountPayments: v })} suffix="회" />
+              <NumberInput value={profile.accountPayments} onChange={(v) => update({ accountPayments: v })} suffix="회" min={0} max={600} />
             </Row>
             <Row label="예치금">
               <NumberInput value={profile.deposit} onChange={(v) => update({ deposit: v })} suffix="만원" width="w-28" />
@@ -358,16 +368,24 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
 }
 
 function NumberInput({
-  value, onChange, suffix, width = "w-20",
+  value, onChange, suffix, width = "w-20", min = 0, max,
 }: {
-  value: number; onChange: (v: number) => void; suffix: string; width?: string;
+  value: number; onChange: (v: number) => void; suffix: string; width?: string; min?: number; max?: number;
 }) {
+  const clamp = (v: number) => {
+    let n = isNaN(v) ? min : v;
+    n = Math.max(min, n);
+    if (max !== undefined) n = Math.min(max, n);
+    return n;
+  };
   return (
     <div className="flex items-center gap-2">
       <input
         type="number"
         value={value}
-        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(clamp(Number(e.target.value)))}
         className={`${width} px-3 py-2 border border-toss-gray-300 rounded-xl text-sm text-right focus:outline-none focus:border-toss-blue`}
       />
       <span className="text-sm text-toss-gray-500">{suffix}</span>
