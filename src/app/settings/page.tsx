@@ -1,0 +1,19 @@
+"use client";
+
+import BottomNav from "@/components/BottomNav";
+import ProfileForm from "@/components/ProfileForm";
+
+export default function SettingsPage() {
+  return (
+    <div className="pb-20">
+      <header className="sticky top-0 z-40 bg-white px-5 pt-14 pb-4">
+        <h1 className="text-2xl font-bold">내 조건</h1>
+        <p className="text-sm text-toss-gray-500 mt-1">
+          조건을 바꾸면 맞는 청약이 달라져요
+        </p>
+      </header>
+      <ProfileForm />
+      <BottomNav />
+    </div>
+  );
+}
