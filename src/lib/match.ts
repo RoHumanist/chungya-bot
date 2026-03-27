@@ -14,10 +14,13 @@ export function matchAll(
   return subs.map((sub) => {
     const reasons: string[] = [];
 
-    // 지역 필터
+    // 지역 필터 (__ALL__ = 전국, [] = 미선택 = 전체)
+    const regionFilter = profile.regions.filter((r) => r !== "__ALL__");
+    const isAllRegions = profile.regions.includes("__ALL__") || profile.regions.length === 0;
     if (
-      profile.regions.length > 0 &&
-      !profile.regions.some((r) => sub.region.includes(r))
+      !isAllRegions &&
+      regionFilter.length > 0 &&
+      !regionFilter.some((r) => sub.region.includes(r))
     ) {
       reasons.push("관심 지역 아님");
     }

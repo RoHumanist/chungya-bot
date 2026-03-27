@@ -64,22 +64,31 @@ export default function ProfileForm({ isOnboarding }: Props) {
 
   const [expandedRegion, setExpandedRegion] = useState<string | null>(null);
 
+  const isAllRegions = profile.regions.includes("__ALL__");
+
   const toggleRegion = (region: string) => {
+    const base = profile.regions.filter((r) => r !== "__ALL__");
     update({
-      regions: profile.regions.includes(region)
-        ? profile.regions.filter((r) => r !== region)
-        : [...profile.regions, region],
+      regions: base.includes(region)
+        ? base.filter((r) => r !== region)
+        : [...base, region],
     });
   };
 
   const toggleRegionAll = (regionName: string, subs: string[]) => {
+    const base = profile.regions.filter((r) => r !== "__ALL__");
     const prefixed = subs.map((s) => `${regionName} ${s}`);
-    const allSelected = prefixed.every((p) => profile.regions.includes(p));
+    const allSelected = prefixed.every((p) => base.includes(p));
     if (allSelected) {
-      update({ regions: profile.regions.filter((r) => !prefixed.includes(r)) });
+      update({ regions: base.filter((r) => !prefixed.includes(r)) });
     } else {
-      update({ regions: [...new Set([...profile.regions, ...prefixed])] });
+      update({ regions: [...new Set([...base, ...prefixed])] });
     }
+  };
+
+  const selectAllRegions = () => {
+    if (isAllRegions) update({ regions: [] });
+    else update({ regions: ["__ALL__"] });
   };
 
   const toggleType = (t: SubscriptionType) => {
@@ -183,9 +192,27 @@ export default function ProfileForm({ isOnboarding }: Props) {
       <Divider />
 
       {/* 관심 지역 */}
-      <Section title="관심 지역" hint="선택 안 하면 전국 전체">
+      <Section title="관심 지역">
         <div className="space-y-3">
-          {REGION_GROUPS.map((group) => {
+          {/* 전국 전체 버튼 */}
+          <button
+            onClick={selectAllRegions}
+            className={`w-full py-3 rounded-2xl text-sm font-semibold transition-all border-2 ${
+              isAllRegions
+                ? "border-toss-blue bg-toss-blue-light text-toss-blue"
+                : "border-toss-gray-100 bg-white text-toss-gray-700"
+            }`}
+          >
+            전국 전체
+          </button>
+
+          {isAllRegions && (
+            <p className="text-sm text-toss-blue font-medium text-center">
+              전국의 모든 청약을 보여드릴게요
+            </p>
+          )}
+
+          {!isAllRegions && REGION_GROUPS.map((group) => {
             const items = REGIONS.filter((r) => r.group === group);
             return (
               <div key={group}>

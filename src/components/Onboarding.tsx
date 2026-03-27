@@ -361,34 +361,42 @@ function RegionStep({
   regions: string[]; onChange: (r: string[]) => void;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const isAll = regions.length === 0;
+  const isAll = regions.includes("__ALL__");
 
   const toggle = (name: string) => {
-    onChange(regions.includes(name) ? regions.filter((r) => r !== name) : [...regions, name]);
+    // 전국 모드면 먼저 해제
+    const base = regions.filter((r) => r !== "__ALL__");
+    onChange(base.includes(name) ? base.filter((r) => r !== name) : [...base, name]);
   };
 
   const toggleAll = (regionName: string, subs: string[]) => {
+    const base = regions.filter((r) => r !== "__ALL__");
     const prefixed = subs.map((s) => `${regionName} ${s}`);
-    const allSelected = prefixed.every((p) => regions.includes(p));
-    if (allSelected) onChange(regions.filter((r) => !prefixed.includes(r)));
-    else onChange([...new Set([...regions, ...prefixed])]);
+    const allSelected = prefixed.every((p) => base.includes(p));
+    if (allSelected) onChange(base.filter((r) => !prefixed.includes(r)));
+    else onChange([...new Set([...base, ...prefixed])]);
   };
 
-  const selectAll = () => onChange([]);
+  const selectAll = () => {
+    if (isAll) onChange([]); // 전국 해제
+    else onChange(["__ALL__"]); // 전국 선택
+  };
+
   const selectSudo = () => {
+    const base = regions.filter((r) => r !== "__ALL__");
     const allSudoSubs = REGIONS.filter((r) => r.group === "수도권" && r.subs)
       .flatMap((r) => r.subs!.map((s) => `${r.name} ${s}`));
     const sudoSimple = REGIONS.filter((r) => r.group === "수도권" && !r.subs).map((r) => r.name);
     const all = [...allSudoSubs, ...sudoSimple];
-    const allSelected = all.every((n) => regions.includes(n));
-    if (allSelected) onChange(regions.filter((r) => !all.includes(r)));
-    else onChange([...new Set([...regions, ...all])]);
+    const allSelected = all.every((n) => base.includes(n));
+    if (allSelected) onChange(base.filter((r) => !all.includes(r)));
+    else onChange([...new Set([...base, ...all])]);
   };
 
-  const isSudo = REGIONS.filter((r) => r.group === "수도권").every((r) => {
+  const isSudo = !isAll && REGIONS.filter((r) => r.group === "수도권").every((r) => {
     if (r.subs) return r.subs.every((s) => regions.includes(`${r.name} ${s}`));
     return regions.includes(r.name);
-  }) && !isAll;
+  });
 
   return (
     <div className="space-y-4">
@@ -416,8 +424,15 @@ function RegionStep({
         </button>
       </div>
 
+      {/* 전국 선택 시 안내 */}
+      {isAll && (
+        <p className="text-sm text-toss-blue font-medium text-center py-2">
+          전국의 모든 청약을 보여드릴게요
+        </p>
+      )}
+
       {/* 지역 그룹별 */}
-      {REGION_GROUPS.map((group) => {
+      {!isAll && REGION_GROUPS.map((group) => {
         const items = REGIONS.filter((r) => r.group === group);
         return (
           <div key={group}>
@@ -435,15 +450,6 @@ function RegionStep({
                   <div key={r.name} className="contents">
                     <button
                       onClick={() => {
-                        if (isAll) {
-                          // 전국 → 개별 선택 전환
-                          if (hasSubs) {
-                            setExpanded(r.name);
-                          } else {
-                            onChange([r.name]);
-                          }
-                          return;
-                        }
                         if (hasSubs) {
                           setExpanded(isExp ? null : r.name);
                         } else {
@@ -451,13 +457,13 @@ function RegionStep({
                         }
                       }}
                       className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                        isAll || selected || subCount > 0
+                        selected || subCount > 0
                           ? "bg-toss-blue text-white shadow-sm"
                           : "bg-toss-gray-100 text-toss-gray-700"
                       }`}
                     >
                       {r.name}
-                      {hasSubs && subCount > 0 && !isAll && (
+                      {hasSubs && subCount > 0 && (
                         <span className="ml-1 text-xs opacity-80">{subCount}</span>
                       )}
                       {hasSubs && (
