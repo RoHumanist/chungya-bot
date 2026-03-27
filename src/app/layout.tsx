@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import DevTools from "@/components/DevTools";
 
 export const metadata: Metadata = {
   title: "청약알리미",
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className="min-h-dvh">
         <Providers>
+          <DevTools />
           <div className="mx-auto max-w-lg min-h-dvh bg-white">
             {children}
           </div>
